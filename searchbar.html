@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title>ASCPower Search</title>
+
+    <script type="text/javascript">
+ 
+      function performSearch() 
+        {
+        var query = 
+          document.getElementById("ascpowertools_search_field").value;
+
+        safari.application.activeBrowserWindow.activeTab.page.dispatchMessage("search", query);
+        }
+    </script>
+  </head>
+  <body>
+    <form onsubmit="return false">
+      <input id="ascpowertools_search_field" type="text" name="ascpowertools_search_field">
+      <button id="ascpowertools_search_button" onclick="performSearch()">Search</button>
+    </form>
+  </body>
+</html>
