@@ -35,17 +35,74 @@ function replyToMessage(aMessageEvent)
     var parameters = JSON.parse(aMessageEvent.message);
 
     ASCPowerSearch(
-      parameters['query'], parameters['author'], parameters['order']);
+      parameters['query'], 
+      parameters['author'], 
+      parameters['order'],
+      parameters['from'],
+      parameters['to']);
     }
   }
 
 // Perform the search.
-function ASCPowerSearch(query, author, order)
+function ASCPowerSearch(query, author, order, from, to)
   {
   // This is the base URL.
   var url =
     'https://discussions.apple.com/api/core/v3/search/contents'
       + '?filter=search(' + encodeURI(query) + ')&sort=' + order;
+
+  if(from.length > 0)
+    {
+    if(from.length == 4)
+      from = from + '-01-01';
+    else if(from.length == 6)
+      from = from + '-01';
+
+    url = url + '&filter=after(' + from + ')';
+    }
+
+  if(to.length > 0)
+    {     
+    if(to.length == 4)
+      to = to + '-12-31';
+    else if(to.length == 7)
+      to = to + '-31';
+
+    var year = parseInt(to.substring(0, 4));
+    var month = parseInt(to.substring(5, 7));
+    var day = parseInt(to.substring(8, 10));
+
+    if((month == 4) || (month == 6) || (month == 9) || (month == 11))
+      if(day > 30)
+        {
+        day = 30;
+
+        to = to.substring(0, 8) + day.toString();
+        }
+
+    if(month == 2)
+      {
+      var max = 28;
+
+      if((year % 4 === 0) && (year % 100 != 0))
+        max = 29;
+      else if (year % 400 === 0)
+        max = 29;
+
+      if(day > max)
+        {
+        day = max;
+
+        to = to.substring(0, 8) + day.toString();
+        }
+      }
+
+    to = to + 'T23:59:59.999+0000';
+
+    console.log(to);
+
+    url = url + '&filter=before(' + to + ')';
+    }
 
   // If I have an author, restrict to an author search.
   if(author.length > 0)
