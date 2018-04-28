@@ -51,12 +51,23 @@ function ASCPowerSearch(query, author, order, from, to)
     'https://discussions.apple.com/api/core/v3/search/contents'
       + '?filter=search(' + encodeURI(query) + ')&sort=' + order;
 
+  var now = new Date();
+  var offset = now.getTimezoneOffset() / 60 * 100;
+  var offsetString = offset.toString();
+
+  if(offset == 0)
+    offsetString = '0000';
+  else if(offsetString.length == 3)
+    offsetString = '0' + offsetString;
+
   if(from.length > 0)
     {
     if(from.length == 4)
       from = from + '-01-01';
     else if(from.length == 6)
       from = from + '-01';
+
+    from = from + 'T00:00:00.000+' + offsetString;
 
     url = url + '&filter=after(' + from + ')';
     }
@@ -97,12 +108,13 @@ function ASCPowerSearch(query, author, order, from, to)
         }
       }
 
-    to = to + 'T23:59:59.999+0000';
-
-    console.log(to);
+    to = to + 'T23:59:59.999+' + offsetString;
 
     url = url + '&filter=before(' + to + ')';
     }
+
+  console.log("From: " + from);
+  console.log("To: " + to);
 
   // If I have an author, restrict to an author search.
   if(author.length > 0)
@@ -232,11 +244,19 @@ function doSearch(url)
               + '</a>';
 
           // Format the date nicely.
-          var date = 
-            item['updated'].substring(0, 10) 
-              + ' ' 
-              + item['updated'].substring(11, 19)
-          
+          var updated = new Date(item['updated'].substring(0, 23));
+
+          var options = 
+            { 
+            year: 'numeric', 
+            month: 'numeric', 
+            day: 'numeric', 
+            hour: 'numeric', 
+            minute: 'numeric', 
+            second: 'numeric' };
+
+          var date = updated.toLocaleString('fr-CA', options);
+
           // Compose the row.
           row.innerHTML = 
             '<td class="ascpowersearch_post">' + post + '</td>'
