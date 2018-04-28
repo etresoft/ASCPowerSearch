@@ -113,9 +113,6 @@ function ASCPowerSearch(query, author, order, from, to)
     url = url + '&filter=before(' + to + ')';
     }
 
-  console.log("From: " + from);
-  console.log("To: " + to);
-
   // If I have an author, restrict to an author search.
   if(author.length > 0)
     doAuthorSearch(url, author);
