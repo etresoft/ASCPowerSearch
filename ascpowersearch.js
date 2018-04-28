@@ -14,35 +14,87 @@ results.innerHTML =
   + '</thead><tbody></tbody></table>'
   + '</div>';
 
+// Add the pop-up window into the DOM.
 document.body.appendChild(results);
 
+// Setup the close button.
 document.getElementById("ascpowersearch_close").addEventListener(
   "click", 
   function()
     {
+    // Fade out the results.
     results.setAttribute('class', 'ascpowersearch_out');
     });
 
-var topPos = null;
-var initialized = false;
-
+// Handle a message from the search bar.
 function replyToMessage(aMessageEvent) 
   {
   if(aMessageEvent.name === "search") 
     {
-    ASCPowerSearch(aMessageEvent.message);
+    // The message is coming via a JSON object.
+    var parameters = JSON.parse(aMessageEvent.message);
+
+    ASCPowerSearch(
+      parameters['query'], parameters['author'], parameters['order']);
     }
   }
 
-function ASCPowerSearch(query)
+// Perform the search.
+function ASCPowerSearch(query, author, order)
   {
+  // This is the base URL.
   var url =
     'https://discussions.apple.com/api/core/v3/search/contents'
-      + '?filter=search(' + encodeURI(query) + ')&sort=updatedDesc';
+      + '?filter=search(' + encodeURI(query) + ')&sort=' + order;
 
-  doSearch(url);
+  // If I have an author, restrict to an author search.
+  if(author.length > 0)
+    doAuthorSearch(url, author);
+  
+  // Otherwise, just search all authors.
+  else
+    doSearch(url);
   }
 
+// Perform an author search.
+function doAuthorSearch(url, author)
+  {
+  // First, lookup the user.
+  var xhr = new XMLHttpRequest();
+
+  xhr.open(
+    'GET', 
+    'https://discussions.apple.com/api/core/v3/people/username/' 
+      + encodeURI(author));
+
+  xhr.onload = 
+    function() 
+      {
+      if(xhr.status === 200) 
+        {
+        var json = xhr.responseText.substring(44);
+
+        var data = JSON.parse(json);
+
+        // Get the user ID.
+        var id = data['id'];
+
+        // Filter the URL by user ID.
+        url = url + '&filter=author(/people/' + id + ')';
+
+        // Now do the search.
+        doSearch(url);
+        }
+      else 
+        {
+        alert("User '" + author + "' not found");
+        }
+      };
+
+  xhr.send();
+  }
+
+// Do the search.
 function doSearch(url)
   {
   var xhr = new XMLHttpRequest();
@@ -54,69 +106,105 @@ function doSearch(url)
       {
       if(xhr.status === 200) 
         {
+        // Star the fade in.
         results.setAttribute('class', 'ascpowersearch_in');
 
         var json = xhr.responseText.substring(44);
 
         var data = JSON.parse(json);
+
+        // Get the list.
         var list = data['list'];
 
+        // Get the next and previous links.
         var next = data['links']['next'];
         var prev = data['links']['previous'];
 
+        // Use these values to figure out what page I'm on.
         var startIndex = data['startIndex'];
         var itemsPerPage = data['itemsPerPage'];
 
-        var scrolldiv = document.querySelector("#ascpowersearch_results div.ascpowersearch_scrolldiv");
-        var table = document.querySelector("#ascpowersearch_results table");
-        var tbody = document.querySelector("#ascpowersearch_results table tbody");
+        // Get the scrolling wrapper div so I can scroll back up to the top
+        // on next and prev.
+        var scrolldiv = 
+          document.querySelector(
+            "#ascpowersearch_results div.ascpowersearch_scrolldiv");
+        
+        // I'll need the table.
+        var table = 
+          document.querySelector("#ascpowersearch_results table");
+        
+        // I'll be adding and removing elements form the table body.
+        var tbody = 
+          document.querySelector("#ascpowersearch_results table tbody");
 
+        // Remove any existing rows.
+        // Note that I've already put the headers into a thead element for
+        // convenience.
         if(tbody != null)
           while(tbody.firstChild) 
             tbody.removeChild(tbody.firstChild);
 
+        // Go through the results.
         for(var i = 0; i < list.length; ++i)
           {
           var item = list[i];
 
+          // Create a row for each item.
           var row = document.createElement('tr');
 
+          // Community > subject
+          // Snippet
+          // All are links to their respective targets.
           var post = 
             '<a href="' + item['parentPlace']['html'] + '" target="_blank">'
               + '<strong>' + item['parentPlace']['name'] + '</strong>'
               + '</a> &gt; '
-              + '<a href="' + item['resources']['html']['ref'] + '" target="_blank">'
+              + '<a href="' 
+              + item['resources']['html']['ref'] + '" target="_blank">'
               + '<strong>' + item['highlightSubject'] + '</strong>'
               + '<br>' + item['highlightBody']
               + '</a>';
 
+          // Add an author link.
           var author = 
-            '<a href="' + item['author']['resources']['html']['ref'] + '" target="_blank">'
+            '<a href="' 
+              + item['author']['resources']['html']['ref'] 
+              + '" target="_blank">'
               + item['author']['displayName']
               + '</a>';
 
+          // Format the date nicely.
           var date = 
-            item['published'].substring(0, 10) 
+            item['updated'].substring(0, 10) 
               + ' ' 
-              + item['published'].substring(11, 19)
+              + item['updated'].substring(11, 19)
           
+          // Compose the row.
           row.innerHTML = 
             '<td class="ascpowersearch_post">' + post + '</td>'
             + '<td class="ascpowersearch_author">' + author + '</td>'
             + '<td class="ascpowersearch_date">' + date + '</td>';
 
+          // Add the row.
           tbody.appendChild(row);
           }
 
+        // Now add the page number, prev, and next links.
         var row = document.createElement('tr');
 
         var prevlink = null;
         var nextlink = null;
 
+        // I would like to do these as true buttons, but Jive seems to be
+        // preventing that. Just use links instead.
         if(prev == null)
+          // If there is no previous link, just use static text.
           prevlink = document.createElement('span');
+        
         else
           {
+          // Create a link to the previous set of data.
           prevlink = document.createElement('a');
           prevlink.setAttribute("ref", "#");
 
@@ -129,9 +217,11 @@ function doSearch(url)
           }
 
         if(next == null)
+          // If there is no next link, just use static text.
           nextlink = document.createElement('span');
         else
           {
+          // Create a link to the next set of data.
           nextlink = document.createElement('a');
           nextlink.setAttribute("ref", "#");
 
@@ -143,28 +233,36 @@ function doSearch(url)
               });
           }
 
+        // Add the text.
         prevlink.innerHTML = 'Prev';
         nextlink.innerHTML = 'Next';
 
+        // Create the cells.
         var post = document.createElement('td');
         var author = document.createElement('td');
         var date = document.createElement('td');
 
+        // I'm using a fixed table layout, so add the classes.
         post.setAttribute("class", "ascpowersearch_post");
         author.setAttribute("class", "ascpowersearch_author");
         date.setAttribute("class", "ascpowersearch_date");
 
+        // Calculate the page number.
         post.innerHTML = "Page: " + ((startIndex / itemsPerPage) + 1);
 
+        // Add the data.
         author.appendChild(prevlink);
         date.appendChild(nextlink);
 
+        // Add the cells.
         row.appendChild(post);
         row.appendChild(author);
         row.appendChild(date);
 
+        // Add the row.
         tbody.appendChild(row);
 
+        // Scroll back to the top.
         scrolldiv.scrollTop = table.offsetTop;
         }
       else 

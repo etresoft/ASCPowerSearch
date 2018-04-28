@@ -9,13 +9,41 @@
         var query = 
           document.getElementById("ascpowertools_search_field").value;
 
-        safari.application.activeBrowserWindow.activeTab.page.dispatchMessage("search", query);
+        var author = 
+          document.getElementById("ascpowertools_author_field").value;
+
+        var orders = document.getElementsByName("ascpowertools_order_field");
+        var order = "updatedDesc";
+
+        for(var i = 0; i < orders.length; i++)
+           if(orders[i].checked)
+               order = orders[i].value;
+
+        var message =
+          JSON.stringify(
+            {
+            query: query,
+            author: author,
+            order: order
+            });
+
+        safari.application.activeBrowserWindow.activeTab.page.dispatchMessage("search", message);
         }
     </script>
   </head>
   <body>
     <form onsubmit="return false">
-      <input id="ascpowertools_search_field" type="text" name="ascpowertools_search_field">
+      <label for="ascpowertools_search_field">Search text:</label>
+      <input id="ascpowertools_search_field" type="text" size="40" name="ascpowertools_search_field">
+
+      <label for="ascpowertools_author_field">Author:</label>
+      <input id="ascpowertools_author_field" type="text" name="ascpowertools_author_field">
+
+      <label for="ascpowertools_order_field">Order by:</label>
+      <input type="radio" name="ascpowertools_order_field" value="relevanceDesc">Relevance
+      <input type="radio" name="ascpowertools_order_field" value="updatedDesc" checked>Date (newest first)
+      <input type="radio" name="ascpowertools_order_field" value="updatedAsc">Date (oldest first)
+
       <button id="ascpowertools_search_button" onclick="performSearch()">Search</button>
     </form>
   </body>
