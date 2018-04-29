@@ -26,11 +26,15 @@ document.getElementById("ascpowersearch_close").addEventListener(
     results.setAttribute('class', 'ascpowersearch_out');
     });
 
+var cancelled = false;
+
 // Handle a message from the search bar.
 function replyToMessage(aMessageEvent) 
   {
   if(aMessageEvent.name === "search") 
     {
+    cancelled = false;
+
     // The message is coming via a JSON object.
     var parameters = JSON.parse(aMessageEvent.message);
 
@@ -40,6 +44,11 @@ function replyToMessage(aMessageEvent)
       parameters['order'],
       parameters['from'],
       parameters['to']);
+    }
+  else if(aMessageEvent.name === "cancel") 
+    {
+    cancelled = true;
+    results.setAttribute('class', 'ascpowersearch_out');
     }
   }
 
@@ -136,6 +145,9 @@ function doAuthorSearch(url, author)
   xhr.onload = 
     function() 
       {
+      if(cancelled)
+        return;
+
       if(xhr.status === 200) 
         {
         var json = xhr.responseText.substring(44);
@@ -171,6 +183,9 @@ function doSearch(url)
   xhr.onload = 
     function() 
       {
+      if(cancelled)
+        return;
+
       if(xhr.status === 200) 
         {
         // Star the fade in.

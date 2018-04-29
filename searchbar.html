@@ -20,12 +20,17 @@
         top: 2px;
         }
 
-      .ascpowersearch_spinner_out
+      #ascpowersearch_cancelsearch_button 
+        {
+        transition: opacity 1s ease-in-out;
+        }
+
+      .ascpowersearch_menubar_out
         {
         opacity: 0;
         }
 
-      .ascpowersearch_spinner_in
+      .ascpowersearch_menubar_in
         {
         opacity: 1;
         }
@@ -39,6 +44,7 @@
 
     <script type="text/javascript">
  
+      // Perform a search.
       function performSearch() 
         {
         var query = 
@@ -68,7 +74,8 @@
 
         safari.application.activeBrowserWindow.activeTab.page.dispatchMessage("search", message);
 
-        document.getElementById("ascpowersearch_spinner").setAttribute("class", "ascpowersearch_spinner_in");
+        document.getElementById("ascpowersearch_spinner").setAttribute("class", "ascpowersearch_menubar_in");
+        document.getElementById("ascpowersearch_cancelsearch_button").setAttribute("class", "ascpowersearch_menubar_in");
         document.getElementById("ascpowersearch_search_field").disabled = true;
         document.getElementById("ascpowersearch_author_field").disabled = true;
         document.getElementById("ascpowersearch_order_field").disabled = true;
@@ -77,11 +84,29 @@
         document.getElementById("ascpowersearch_search_button").disabled = true;
         }
 
+      // Cancel a search in progress.
+      function cancelSearch() 
+        {
+        safari.application.activeBrowserWindow.activeTab.page.dispatchMessage("cancel", "cancel");
+
+        document.getElementById("ascpowersearch_spinner").setAttribute("class", "ascpowersearch_menubar_out");
+        document.getElementById("ascpowersearch_cancelsearch_button").setAttribute("class", "ascpowersearch_menubar_out");
+        document.getElementById("ascpowersearch_search_field").disabled = false;
+        document.getElementById("ascpowersearch_author_field").disabled = false;
+        document.getElementById("ascpowersearch_order_field").disabled = false;
+        document.getElementById("ascpowersearch_from_field").disabled = false;
+        document.getElementById("ascpowersearch_to_field").disabled = false;
+        document.getElementById("ascpowersearch_search_button").disabled = false;
+        }
+
+      // Handle a response from the injected script that the search has
+      // completed.
       function respondToMessage(messageEvent) 
         {
         if(messageEvent.name === "complete")
           {
-        document.getElementById("ascpowersearch_spinner").setAttribute("class", "ascpowersearch_spinner_out");
+          document.getElementById("ascpowersearch_spinner").setAttribute("class", "ascpowersearch_menubar_out");
+          document.getElementById("ascpowersearch_cancelsearch_button").setAttribute("class", "ascpowersearch_menubar_out");
           document.getElementById("ascpowersearch_search_field").disabled = false;
           document.getElementById("ascpowersearch_author_field").disabled = false;
           document.getElementById("ascpowersearch_order_field").disabled = false;
@@ -117,7 +142,8 @@
       <input id="ascpowersearch_to_field" type="text" size="11" placeholder="YYYY-MM-DD" name="ascpowersearch_to_field">
 
       <button id="ascpowersearch_search_button" onclick="performSearch()">Search</button>
-      <div id="ascpowersearch_spinner" class="ascpowersearch_spinner_out"></div>
+      <div id="ascpowersearch_spinner" class="ascpowersearch_menubar_out"></div>
+      <button id="ascpowersearch_cancelsearch_button" class="ascpowersearch_menubar_out" onclick="cancelSearch()">Cancel</button>
     </form>
   </body>
 </html>
