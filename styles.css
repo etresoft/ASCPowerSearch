@@ -60,7 +60,7 @@
 #ascpowersearch_results th.ascpowersearch_post,
 #ascpowersearch_results td.ascpowersearch_post
   {
-  width: 800px !important;
+  width: 780px !important;
   }
 
 #ascpowersearch_results th.ascpowersearch_author,
@@ -72,7 +72,7 @@
 #ascpowersearch_results th.ascpowersearch_date,
 #ascpowersearch_results td.ascpowersearch_date
   {
-  width: 80px !important;
+  width: 100px !important;
   }
 
 #ascpowersearch_results th

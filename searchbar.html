@@ -2,28 +2,59 @@
   <head>
     <title>ASCPower Search</title>
 
+    <style>
+      #ascpowersearch_spinner 
+        {
+        border: 3px dotted #f3f3f3; 
+        border-left: 3px dotted #101010; 
+        border-bottom: 3px dotted #333333; 
+        border-right: 3px dotted #737373; 
+        border-top: 3px dotted #c5c5c5; 
+        border-radius: 50%;
+        width: 6px;
+        height: 6px;
+        animation: ascpowersearch_spin 1s linear infinite;
+        transition: opacity 1s ease-in-out;
+        display: inline-block !important;
+        position: relative;
+        top: 2px;
+        }
+
+      .ascpowersearch_spinner_out
+        {
+        opacity: 0;
+        }
+
+      .ascpowersearch_spinner_in
+        {
+        opacity: 1;
+        }
+
+      @keyframes ascpowersearch_spin 
+        {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+        }
+    </style>
+
     <script type="text/javascript">
  
       function performSearch() 
         {
         var query = 
-          document.getElementById("ascpowertools_search_field").value;
+          document.getElementById("ascpowersearch_search_field").value;
 
         var author = 
-          document.getElementById("ascpowertools_author_field").value;
+          document.getElementById("ascpowersearch_author_field").value;
 
-        var orders = document.getElementsByName("ascpowertools_order_field");
-        var order = "updatedDesc";
-
-        for(var i = 0; i < orders.length; i++)
-           if(orders[i].selected)
-               order = orders[i].value;
+        var orders = document.getElementById("ascpowersearch_order_field");
+        var order = orders.options[orders.selectedIndex].value;
 
         var from = 
-          document.getElementById("ascpowertools_from_field").value;
+          document.getElementById("ascpowersearch_from_field").value;
 
         var to = 
-          document.getElementById("ascpowertools_to_field").value;
+          document.getElementById("ascpowersearch_to_field").value;
 
         var message =
           JSON.stringify(
@@ -36,32 +67,57 @@
             });
 
         safari.application.activeBrowserWindow.activeTab.page.dispatchMessage("search", message);
+
+        document.getElementById("ascpowersearch_spinner").setAttribute("class", "ascpowersearch_spinner_in");
+        document.getElementById("ascpowersearch_search_field").disabled = true;
+        document.getElementById("ascpowersearch_author_field").disabled = true;
+        document.getElementById("ascpowersearch_order_field").disabled = true;
+        document.getElementById("ascpowersearch_from_field").disabled = true;
+        document.getElementById("ascpowersearch_to_field").disabled = true;
+        document.getElementById("ascpowersearch_search_button").disabled = true;
         }
+
+      function respondToMessage(messageEvent) 
+        {
+        if(messageEvent.name === "complete")
+          {
+        document.getElementById("ascpowersearch_spinner").setAttribute("class", "ascpowersearch_spinner_out");
+          document.getElementById("ascpowersearch_search_field").disabled = false;
+          document.getElementById("ascpowersearch_author_field").disabled = false;
+          document.getElementById("ascpowersearch_order_field").disabled = false;
+          document.getElementById("ascpowersearch_from_field").disabled = false;
+          document.getElementById("ascpowersearch_to_field").disabled = false;
+          document.getElementById("ascpowersearch_search_button").disabled = false;
+          }
+        }
+ 
+      safari.self.browserWindow.addEventListener("message", respondToMessage, false);
     </script>
   </head>
   <body>
     <form onsubmit="return false">
-      <label for="ascpowertools_search_field">Search text:</label>
-      <input id="ascpowertools_search_field" type="text" size="40" name="ascpowertools_search_field">
+      <label for="ascpowersearch_search_field">Search text:</label>
+      <input id="ascpowersearch_search_field" type="text" size="40" name="ascpowersearch_search_field" autocomplete="off">
 
-      <label for="ascpowertools_author_field">Author:</label>
-      <input id="ascpowertools_author_field" type="text" name="ascpowertools_author_field">
+      <label for="ascpowersearch_author_field">Author:</label>
+      <input id="ascpowersearch_author_field" type="text" name="ascpowersearch_author_field" autocomplete="off">
 
-      <label for="ascpowertools_order_field">Order by:</label>
+      <label for="ascpowersearch_order_field">Order by:</label>
 
-      <select name="ascpowertools_order_field">
+      <select id="ascpowersearch_order_field">
         <option value="relevanceDesc">Relevance</option>
         <option value="updatedDesc" selected>Date (newest first)</option>
         <option value="updatedAsc">Date (oldest first)</option>
       </select>
 
-      <label for="ascpowertools_from_field">From:</label>
-      <input id="ascpowertools_from_field" type="text" size="11" placeholder="YYYY-MM-DD" name="ascpowertools_from_field">
+      <label for="ascpowersearch_from_field">From:</label>
+      <input id="ascpowersearch_from_field" type="text" size="11" placeholder="YYYY-MM-DD" name="ascpowersearch_from_field">
 
-      <label for="ascpowertools_to_field">To:</label>
-      <input id="ascpowertools_to_field" type="text" size="11" placeholder="YYYY-MM-DD" name="ascpowertools_to_field">
+      <label for="ascpowersearch_to_field">To:</label>
+      <input id="ascpowersearch_to_field" type="text" size="11" placeholder="YYYY-MM-DD" name="ascpowersearch_to_field">
 
-      <button id="ascpowertools_search_button" onclick="performSearch()">Search</button>
+      <button id="ascpowersearch_search_button" onclick="performSearch()">Search</button>
+      <div id="ascpowersearch_spinner" class="ascpowersearch_spinner_out"></div>
     </form>
   </body>
 </html>

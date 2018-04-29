@@ -154,6 +154,7 @@ function doAuthorSearch(url, author)
       else 
         {
         alert("User '" + author + "' not found");
+        safari.self.tab.dispatchMessage("complete", "Search complete.");        
         }
       };
 
@@ -338,10 +339,12 @@ function doSearch(url)
 
         // Scroll back to the top.
         scrolldiv.scrollTop = table.offsetTop;
+        safari.self.tab.dispatchMessage("complete", "Search complete.");        
         }
       else 
         {
         alert('Request failed. Returned status of ' + xhr.status);
+        safari.self.tab.dispatchMessage("complete", "Search complete.");        
         }
       };
 
